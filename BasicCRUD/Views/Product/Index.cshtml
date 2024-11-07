@@ -1,0 +1,99 @@
+﻿@model IEnumerable<Models.Entities.Product>
+
+<div class="container mt-4">
+    <h1 class="display-4 text-center mb-4">Product List Page</h1>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">SKU</th>
+                    <th scope="col">Base Price</th>
+                    <th scope="col">MRP</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in Model)
+                {
+                    <tr onclick="showProductDetails(@product.Id)" style="cursor: pointer;" id="product-row-@product.Id">
+                        <td>@product.Name</td>
+                        <td>@product.SKU</td>
+                        <td>@product.BasePrice.ToString("C")</td>
+                        <td>@product.MRP.ToString("C")</td>
+                        <td>@product.Category?.Name</td>
+                        <td>
+                            <a class="btn btn-sm btn-primary me-1" asp-action="CreateOrEdit" asp-route-id="@product.Id">Edit</a>
+                            <a href="javascript:void(0);" onclick="deleteProduct(@product.Id)" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center mt-4">
+        <a class="btn btn-success" asp-action="CreateOrEdit">Add New Product</a>
+    </div>
+</div>
+
+<div class="modal fade" id="productDetailsModal" tabindex="-1" aria-labelledby="productDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productDetailsModalLabel">Product Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="productDetailsContent">
+                <!-- Product details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function deleteProduct(productId) {
+        if (!confirm("Are you sure you want to delete this product?")) {
+            return;
+        }
+        $.ajax({
+            url: '/Product/Delete/' + productId,
+            type: 'Delete',
+            success: function (data) {
+                if (data.success) {
+                    $('#product-row-' + productId).remove();
+                    alert(data.message);
+                } else {
+                    alert(data.message);
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+                alert("An error occurred while trying to delete the product.");
+            }
+        });
+    }
+
+    function showProductDetails(productId) {
+        $.ajax({
+            url: '/Product/Details/' + productId,
+            type: 'GET',
+            success: function (data) {
+                // Load the returned HTML (partial view) into the modal body
+                $('#productDetailsContent').html(data);
+                
+                // Show the modal
+                var modal = new bootstrap.Modal(document.getElementById('productDetailsModal'));
+                modal.show();
+            },
+            error: function () {
+                alert("An error occurred while fetching product details.");
+            }
+        });
+    }
+</script>
